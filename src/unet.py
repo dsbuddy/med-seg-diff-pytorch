@@ -36,7 +36,8 @@ class Unet(nn.Module):
         self.channels = channels
         self.input_channels = input_channels
         self.self_condition = self_condition
-        #input_channels = channels * (2 if self_condition else 1)
+        output_channels = input_channels
+        input_channels = input_channels * (2 if self_condition else 1)
         print("Channels: {}".format(channels))
         print("In Channels: {}".format(input_channels))
 
@@ -125,7 +126,7 @@ class Unet(nn.Module):
         # projection out to predictions
 
         self.final_res_block = block_klass(dim * 2, dim, time_emb_dim = time_dim)
-        self.final_conv = nn.Conv2d(dim, input_channels, 1)
+        self.final_conv = nn.Conv2d(dim, output_channels, 1)
 
     def forward(
         self,
@@ -139,7 +140,6 @@ class Unet(nn.Module):
         if self.self_condition:
             x_self_cond = default(x_self_cond, lambda: torch.zeros_like(x))
             x = torch.cat((x_self_cond, x), dim = 1)
-
         x = self.init_conv(x)
         r = x.clone()
 

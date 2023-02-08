@@ -18,6 +18,7 @@ wandb.init(project="med-seg-diff")
 
 ## Parse CLI arguments ##
 parser = argparse.ArgumentParser()
+parser.add_argument('-sc', '--self_condition', action='store_true', help='Whether to do self condition')
 parser.add_argument('-lr', '--learning_rate', type=float, default=5e-4, help='learning rate')
 parser.add_argument('-ab1', '--adam_beta1', type=float, default=0.95, help='The beta1 parameter for the Adam optimizer.')
 parser.add_argument('-ab2', '--adam_beta2', type=float, default=0.999, help='The beta2 parameter for the Adam optimizer.')
@@ -28,7 +29,7 @@ parser.add_argument('-c', '--channels', type=int, default=3, help='output channe
 parser.add_argument('-is', '--image-size', type=int, default=128, help='input image size (default: 128)')
 parser.add_argument('-dd', '--data-dir', default='./data', help='directory of input image')
 parser.add_argument('-d', '--dim', type=int, default=64, help='dim (deaault: 64)')
-parser.add_argument('-e', '--epochs', type=int, default=1, help='number of epochs (default: 128)')
+parser.add_argument('-e', '--epochs', type=int, default=10, help='number of epochs (default: 128)')
 parser.add_argument('-bs', '--batch-size', type=int, default=8, help='batch size to train on (default: 8)')
 parser.add_argument('-ds', '--dataset', default='ISIC', help='Dataset to use')
 args = parser.parse_args()
@@ -65,7 +66,8 @@ def main():
         image_size = args.image_size,
         dim_mults = (1, 2, 4, 8),
         input_channels = args.input_channels,
-        channels = args.channels
+        channels = args.channels,
+        self_condition = args.self_condition
     )
 
     diffusion = MedSegDiff(
@@ -105,14 +107,9 @@ def main():
         counter += 1
         epoch_loss = running_loss / len(data_loader)
         print('Training Loss : {:.4f}'.format(epoch_loss))
-
-
-    ## INFERENCE ##
-    pred = diffusion.sample(img).cpu()#.detach().numpy()
-    wandb.log({'pred': wandb.Image(pred)})
-    wandb.log({'img': wandb.Image(img)})
-    wandb.log({'mask': wandb.Image(mask)})
-
+        ## INFERENCE ##
+        pred = diffusion.sample(img).cpu()#.detach().numpy()
+        wandb.log({'pred-img-mask': [wandb.Image(pred), wandb.Image(img), wandb.Image(mask)]})
 
 
 if __name__ == '__main__':
