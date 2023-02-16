@@ -136,7 +136,7 @@ def main():
         epoch_loss = running_loss / len(data_loader)
         print('Training Loss : {:.4f}'.format(epoch_loss))
         ## INFERENCE ##
-        pred = diffusion.sample(img).cpu().detach().numpy()
+        pred = diffusion.sample(img).cpu()
         for tracker in accelerator.trackers:
             if tracker.name == "wandb":
                 tracker.log(
